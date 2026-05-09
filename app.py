@@ -5,7 +5,6 @@ Run with:
   streamlit run app.py
 """
 
-import io
 import streamlit as st
 import plotly.graph_objects as go
 
@@ -28,6 +27,23 @@ st.set_page_config(
     page_icon="📡",
     layout="wide",
 )
+
+# Print CSS — hides UI chrome when the user prints / saves as PDF
+st.markdown("""
+<style>
+@media print {
+    [data-testid="stSidebar"],
+    [data-testid="stToolbar"],
+    [data-testid="stDecoration"],
+    [data-testid="stFileUploader"],
+    section[data-testid="stFileUploadDropzone"],
+    .stDownloadButton,
+    .stButton,
+    footer { display: none !important; }
+    .block-container { padding: 1rem !important; }
+}
+</style>
+""", unsafe_allow_html=True)
 
 st.title("📡 Oscilloscope Payload Decoder")
 st.caption("Upload a Tektronix (or compatible) CSV capture to extract and decode the bit stream.")
@@ -129,22 +145,20 @@ if meta:
                 st.text(f"{label:<22}: {meta[key]}")
 
 # ---------------------------------------------------------------------------
-# Signal plot
+# Signal plot — with range slider for long captures
 # ---------------------------------------------------------------------------
 
 st.subheader("Signal")
 
-# Downsample for display if the capture is very large (keep chart snappy)
 MAX_PLOT_POINTS = 10_000
-n = len(times)
+n    = len(times)
 step = max(1, n // MAX_PLOT_POINTS)
-t_plot = times[::step]
-v_plot = voltages[::step]
-t_ms   = [t * 1e3 for t in t_plot]   # display in ms
+t_ms = [t * 1e3 for t in times[::step]]
+v_ds = voltages[::step]
 
 fig = go.Figure()
 fig.add_trace(go.Scatter(
-    x=t_ms, y=v_plot,
+    x=t_ms, y=v_ds,
     mode="lines",
     name="Voltage",
     line=dict(color="#1f77b4", width=1),
@@ -159,8 +173,19 @@ fig.update_layout(
     xaxis_title="Time (ms)",
     yaxis_title="Voltage (V)",
     margin=dict(l=0, r=0, t=10, b=0),
-    height=300,
+    height=340,
     legend=dict(orientation="h"),
+    xaxis=dict(
+        rangeslider=dict(visible=True, thickness=0.08),
+        rangeselector=dict(
+            buttons=[
+                dict(step="all", label="All"),
+                dict(count=0.1,  label="0.1 ms", step="millisecond", stepmode="backward"),
+                dict(count=1,    label="1 ms",   step="millisecond", stepmode="backward"),
+                dict(count=10,   label="10 ms",  step="millisecond", stepmode="backward"),
+            ]
+        ),
+    ),
 )
 st.plotly_chart(fig, use_container_width=True)
 
@@ -191,7 +216,6 @@ tab_bits, tab_decoded, tab_hex = st.tabs(["Raw bit stream", "Decoded payload", "
 
 with tab_bits:
     stream_str = "".join(str(b) for b in bit_stream)
-    # Wrap into lines of 64, grouped in nibbles of 8
     lines_out = []
     for i in range(0, len(stream_str), 64):
         chunk = stream_str[i : i + 64]
@@ -200,20 +224,16 @@ with tab_bits:
 
 with tab_decoded:
     if encoding == "ascii":
-        payload = "".join(decoded)
-        st.code(payload, language=None)
+        st.code("".join(decoded), language=None)
     else:
-        # Format as rows of 16 tokens
         rows = []
         for i in range(0, len(decoded), 16):
             rows.append(" ".join(decoded[i : i + 16]))
         st.code("\n".join(rows), language=None)
 
-    # Download button
-    raw_bytes = bytes(frames)
     st.download_button(
         "Download raw bytes",
-        data=raw_bytes,
+        data=bytes(frames),
         file_name="decoded_payload.bin",
         mime="application/octet-stream",
     )
@@ -227,3 +247,28 @@ with tab_hex:
         asc_part = "".join(chr(v) if 32 <= v <= 126 else "." for v in row)
         hex_lines.append(f"{addr}  {hex_part:<48}  {asc_part}")
     st.code("\n".join(hex_lines), language=None)
+
+# ---------------------------------------------------------------------------
+# Print / Save as PDF
+# ---------------------------------------------------------------------------
+
+st.divider()
+st.markdown("**Export**")
+st.markdown(
+    """
+    <a href="javascript:window.print()" style="
+        display: inline-block;
+        padding: 0.45rem 1.2rem;
+        background-color: #ff4b4b;
+        color: white;
+        border-radius: 0.4rem;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.875rem;
+    ">🖨️ Print / Save as PDF</a>
+    <span style="margin-left:0.75rem; font-size:0.8rem; color:gray;">
+        Opens your browser's print dialog — choose "Save as PDF" as the destination.
+    </span>
+    """,
+    unsafe_allow_html=True,
+)
