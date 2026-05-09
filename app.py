@@ -177,14 +177,6 @@ fig.update_layout(
     legend=dict(orientation="h"),
     xaxis=dict(
         rangeslider=dict(visible=True, thickness=0.08),
-        rangeselector=dict(
-            buttons=[
-                dict(step="all", label="All"),
-                dict(count=0.1,  label="0.1 ms", step="millisecond", stepmode="backward"),
-                dict(count=1,    label="1 ms",   step="millisecond", stepmode="backward"),
-                dict(count=10,   label="10 ms",  step="millisecond", stepmode="backward"),
-            ]
-        ),
     ),
 )
 st.plotly_chart(fig, use_container_width=True)
