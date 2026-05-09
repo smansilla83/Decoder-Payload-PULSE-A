@@ -5,9 +5,11 @@ Run with:
   streamlit run app.py
 """
 
+import numpy as np
 import streamlit as st
 import plotly.graph_objects as go
 
+from theme import apply_theme, render_nav, plot_colors
 from pdf_report import build_pdf
 from decoder_1 import (
     parse_csv_content,
@@ -20,7 +22,7 @@ from decoder_1 import (
 )
 
 # ---------------------------------------------------------------------------
-# Page config
+# Page config + theme
 # ---------------------------------------------------------------------------
 
 st.set_page_config(
@@ -28,189 +30,16 @@ st.set_page_config(
     page_icon="📡",
     layout="wide",
 )
+LIGHT = apply_theme()
+pc    = plot_colors(LIGHT)
 
 # ---------------------------------------------------------------------------
-# Theme toggle (session state)
-# ---------------------------------------------------------------------------
-
-if "light_mode" not in st.session_state:
-    st.session_state.light_mode = False
-
-LIGHT = st.session_state.light_mode
-
-THEME_CSS = """
-<style>
-  /* ── Warm beige palette ──────────────────────────────────────────
-     bg:       #faf6f0  main page (warm cream)
-     sidebar:  #f0ebe0  sidebar
-     surface:  #ede6d8  cards / inputs / dropzones
-     surface2: #e4dccb  deeper surface / hover
-     border:   #c8b89a  warm tan border
-     text:     #2c1f0e  dark warm brown
-     muted:    #6b5540  secondary text
-  ────────────────────────────────────────────────────────────────── */
-
-  /* Page */
-  html, body, .stApp, .main, .block-container {
-    background-color: #faf6f0 !important;
-  }
-
-  /* Sidebar */
-  [data-testid="stSidebar"],
-  [data-testid="stSidebar"] > div:first-child {
-    background-color: #f0ebe0 !important;
-  }
-
-  /* All text warm dark brown */
-  .stApp, .stApp p, .stApp span, .stApp div,
-  .stApp label, .stApp h1, .stApp h2, .stApp h3,
-  .stApp h4, .stApp h5, .stApp h6, .stApp li,
-  [data-testid="stSidebar"] * {
-    color: #2c1f0e !important;
-  }
-
-  /* ── File uploader — target every layer ── */
-  [data-testid="stFileUploader"],
-  [data-testid="stFileUploader"] > div,
-  section[data-testid="stFileUploadDropzone"],
-  div[data-testid="stFileUploadDropzone"],
-  [data-testid="stFileUploadDropzone"],
-  [data-testid="stFileUploadDropzone"] > div,
-  [data-testid="stFileUploadDropzone"] > section {
-    background-color: #ede6d8 !important;
-    border-color: #c8b89a !important;
-  }
-  [data-testid="stFileUploadDropzone"] *,
-  [data-testid="stFileUploader"] * {
-    color: #2c1f0e !important;
-    background-color: transparent !important;
-  }
-  [data-testid="stFileUploadDropzone"] button,
-  [data-testid="stFileUploaderDropzoneInput"] ~ * button {
-    background-color: #e4dccb !important;
-    border-color: #c8b89a !important;
-    color: #2c1f0e !important;
-  }
-
-  /* ── Selects / dropdowns ── */
-  [data-baseweb="select"] > div,
-  [data-baseweb="select"] div[class*="ValueContainer"],
-  [data-baseweb="input"] > div,
-  [data-baseweb="base-input"],
-  [data-baseweb="select"] * {
-    background-color: #ede6d8 !important;
-    border-color: #c8b89a !important;
-    color: #2c1f0e !important;
-  }
-  [data-baseweb="popover"] div,
-  [data-baseweb="menu"] {
-    background-color: #ede6d8 !important;
-    color: #2c1f0e !important;
-  }
-  [data-baseweb="option"]:hover { background-color: #e4dccb !important; }
-
-  /* ── Number inputs ── */
-  input[type="number"], input[type="text"] {
-    background-color: #ede6d8 !important;
-    color: #2c1f0e !important;
-    border-color: #c8b89a !important;
-  }
-
-  /* ── Buttons ── */
-  button, [data-testid="stBaseButton-secondary"] {
-    background-color: #e4dccb !important;
-    color: #2c1f0e !important;
-    border-color: #c8b89a !important;
-  }
-
-  /* ── Alert / info boxes ── */
-  [data-testid="stAlert"],
-  [data-testid="stAlertContainer"] {
-    background-color: #eee6d5 !important;
-    border-left-color: #c8b89a !important;
-  }
-  [data-testid="stAlert"] * { color: #2c1f0e !important; }
-
-  /* ── Metrics ── */
-  [data-testid="stMetricValue"] { color: #2c1f0e !important; }
-  [data-testid="stMetricLabel"] { color: #6b5540 !important; }
-
-  /* ── Tabs ── */
-  [data-baseweb="tab-list"]  { background-color: #e4dccb !important; }
-  [data-baseweb="tab"]       { color: #2c1f0e !important; }
-  [aria-selected="true"]     { background-color: #d4c8b0 !important; }
-  [data-baseweb="tab-panel"] { background-color: #faf6f0 !important; }
-
-  /* ── Code blocks ── */
-  pre, code,
-  [data-testid="stCode"] pre,
-  .stCodeBlock, .stCodeBlock * {
-    background-color: #ede6d8 !important;
-    color: #2c1f0e !important;
-  }
-
-  /* ── Expanders ── */
-  [data-testid="stExpander"],
-  [data-testid="stExpander"] > details {
-    background-color: #f0ebe0 !important;
-    border-color: #c8b89a !important;
-  }
-  [data-testid="stExpander"] summary { color: #2c1f0e !important; }
-
-  /* ── Divider ── */
-  hr { border-color: #c8b89a !important; }
-
-  /* ── Caption ── */
-  .stCaption, [data-testid="stCaptionContainer"] * {
-    color: #6b5540 !important;
-  }
-
-  /* ── Nav page links ── */
-  [data-testid="stPageLink"] a,
-  [data-testid="stPageLink"] a * { color: #2c1f0e !important; }
-  [data-testid="stPageLink-active"] a { background-color: #d4c8b0 !important; }
-</style>
-""" if LIGHT else ""
-
-PRINT_CSS = """
-<style>
-@media print {
-    [data-testid="stSidebar"],
-    [data-testid="stToolbar"],
-    [data-testid="stDecoration"],
-    [data-testid="stFileUploader"],
-    section[data-testid="stFileUploadDropzone"],
-    .stDownloadButton,
-    .stButton,
-    footer { display: none !important; }
-    .block-container { padding: 1rem !important; }
-}
-</style>
-"""
-
-st.markdown(PRINT_CSS + THEME_CSS, unsafe_allow_html=True)
-
-# ---------------------------------------------------------------------------
-# Title + nav bar
+# Title + nav
 # ---------------------------------------------------------------------------
 
 st.title("📡 Oscilloscope Payload Decoder")
 st.caption("Upload a Tektronix (or compatible) CSV capture to extract and decode the bit stream.")
-
-nav1, nav2, nav3, _, theme_col = st.columns([1, 1, 1, 4, 1])
-with nav1:
-    st.page_link("app.py", label="🏠 Decoder")
-with nav2:
-    st.page_link("pages/Compare.py", label="🔀 Compare")
-with nav3:
-    st.page_link("pages/Reference.py", label="📖 Reference")
-with theme_col:
-    label = "☀️ Light" if not LIGHT else "🌙 Dark"
-    if st.button(label, key="theme_toggle"):
-        st.session_state.light_mode = not st.session_state.light_mode
-        st.rerun()
-
-st.divider()
+render_nav("decoder")
 
 # ---------------------------------------------------------------------------
 # Sidebar — settings
@@ -224,30 +53,25 @@ with st.sidebar:
         options=["ascii", "hex", "decimal", "binary"],
         index=0,
     )
-
-    bits_per_frame = st.selectbox(
-        "Bits per frame",
-        options=[8, 7, 6, 5],
-        index=0,
-    )
-
+    bits_per_frame = st.selectbox("Bits per frame", options=[8, 7, 6, 5], index=0)
     lsb_first = st.checkbox("LSB first (UART)", value=False)
     invert    = st.checkbox("Invert signal (active-low)", value=False)
 
     st.divider()
     st.subheader("Threshold")
-    auto_thresh = st.checkbox("Auto threshold (midpoint)", value=True)
-    manual_threshold = st.number_input(
-        "Manual threshold (V)", value=2.5, step=0.1,
-        disabled=auto_thresh,
-    )
+    auto_thresh      = st.checkbox("Auto threshold (midpoint)", value=True)
+    manual_threshold = st.number_input("Manual threshold (V)", value=2.5, step=0.1,
+                                       disabled=auto_thresh)
 
     st.subheader("Baud rate")
-    auto_baud = st.checkbox("Auto-detect baud rate", value=True)
-    manual_baud = st.number_input(
-        "Manual baud rate (bps)", value=9600, step=100,
-        disabled=auto_baud,
-    )
+    auto_baud   = st.checkbox("Auto-detect baud rate", value=True)
+    manual_baud = st.number_input("Manual baud rate (bps)", value=9600, step=100,
+                                  disabled=auto_baud)
+
+    st.divider()
+    st.subheader("FFT")
+    fft_top_n  = st.slider("Dominant frequencies to show", 3, 10, 5)
+    fft_log    = st.checkbox("Log scale (Y axis)", value=False)
 
 # ---------------------------------------------------------------------------
 # File upload
@@ -275,7 +99,7 @@ except Exception as e:
     st.stop()
 
 # ---------------------------------------------------------------------------
-# Threshold & bits
+# Decode
 # ---------------------------------------------------------------------------
 
 threshold = auto_threshold(voltages) if auto_thresh else float(manual_threshold)
@@ -304,52 +128,34 @@ if meta:
             "vertical_offset":  "Vertical offset",
             "horizontal_scale": "Horizontal scale",
         }
-        for key, label in labels.items():
-            if key in meta:
-                st.text(f"{label:<22}: {meta[key]}")
+        for k, label in labels.items():
+            if k in meta:
+                st.text(f"{label:<22}: {meta[k]}")
 
 # ---------------------------------------------------------------------------
-# Signal plot — with range slider for long captures
+# Signal plot
 # ---------------------------------------------------------------------------
 
 st.subheader("Signal")
 
-MAX_PLOT_POINTS = 10_000
-step = max(1, len(times) // MAX_PLOT_POINTS)
+MAX_PTS = 10_000
+step = max(1, len(times) // MAX_PTS)
 t_ms = [t * 1e3 for t in times[::step]]
 v_ds = voltages[::step]
 
 fig = go.Figure()
-fig.add_trace(go.Scatter(
-    x=t_ms, y=v_ds,
-    mode="lines",
-    name="Voltage",
-    line=dict(color="#1f77b4", width=1),
-))
-fig.add_hline(
-    y=threshold,
-    line=dict(color="red", dash="dash", width=1),
-    annotation_text=f"Threshold {threshold:.2f} V",
-    annotation_position="bottom right",
-)
-
-plot_bg   = "#ede6d8" if LIGHT else "#0e1117"
-plot_text = "#2c1f0e" if LIGHT else "#fafafa"
-grid_col  = "#c8b89a" if LIGHT else "#333333"
+fig.add_trace(go.Scatter(x=t_ms, y=v_ds, mode="lines", name="Voltage",
+                         line=dict(color="#1f77b4", width=1)))
+fig.add_hline(y=threshold, line=dict(color="red", dash="dash", width=1),
+              annotation_text=f"Threshold {threshold:.2f} V",
+              annotation_position="bottom right")
 fig.update_layout(
-    xaxis_title="Time (ms)",
-    yaxis_title="Voltage (V)",
-    margin=dict(l=0, r=0, t=10, b=0),
-    height=340,
+    xaxis_title="Time (ms)", yaxis_title="Voltage (V)",
+    margin=dict(l=0, r=0, t=10, b=0), height=320,
     legend=dict(orientation="h"),
-    paper_bgcolor=plot_bg,
-    plot_bgcolor=plot_bg,
-    font=dict(color=plot_text),
-    xaxis=dict(
-        rangeslider=dict(visible=True, thickness=0.08),
-        gridcolor=grid_col,
-    ),
-    yaxis=dict(gridcolor=grid_col),
+    paper_bgcolor=pc["bg"], plot_bgcolor=pc["bg"], font=dict(color=pc["text"]),
+    xaxis=dict(rangeslider=dict(visible=True, thickness=0.08), gridcolor=pc["grid"]),
+    yaxis=dict(gridcolor=pc["grid"]),
 )
 st.plotly_chart(fig, use_container_width=True)
 
@@ -359,20 +165,92 @@ st.plotly_chart(fig, use_container_width=True)
 
 duration = times[-1] - times[0]
 
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Samples",       f"{len(voltages):,}")
-col2.metric("Duration",      f"{duration*1e3:.3f} ms")
-col3.metric("Voltage range", f"{min(voltages):.2f} – {max(voltages):.2f} V")
-col4.metric("Threshold",     f"{threshold:.3f} V")
+c1, c2, c3, c4 = st.columns(4)
+c1.metric("Samples",       f"{len(voltages):,}")
+c2.metric("Duration",      f"{duration*1e3:.3f} ms")
+c3.metric("Voltage range", f"{min(voltages):.2f} – {max(voltages):.2f} V")
+c4.metric("Threshold",     f"{threshold:.3f} V")
 
-col5, col6, col7, col8 = st.columns(4)
-col5.metric("Baud rate",     f"{baud:,.0f} bps")
-col6.metric("Bit period",    f"{1/baud*1e6:.2f} µs")
-col7.metric("Bits extracted",f"{len(bit_stream)}")
-col8.metric("Frames",        f"{len(frames)}")
+c5, c6, c7, c8 = st.columns(4)
+c5.metric("Baud rate",     f"{baud:,.0f} bps")
+c6.metric("Bit period",    f"{1/baud*1e6:.2f} µs")
+c7.metric("Bits extracted",f"{len(bit_stream)}")
+c8.metric("Frames",        f"{len(frames)}")
 
 # ---------------------------------------------------------------------------
-# Tabs — raw bits / decoded / hex dump
+# Fourier Transform (FFT)
+# ---------------------------------------------------------------------------
+
+st.subheader("Frequency Spectrum (FFT)")
+
+v_arr = np.array(voltages)
+N     = len(v_arr)
+sample_rate_hz = N / duration
+
+# Remove DC offset before FFT
+fft_vals  = np.fft.rfft(v_arr - np.mean(v_arr))
+fft_freqs = np.fft.rfftfreq(N, d=1.0 / sample_rate_hz)
+fft_mag   = np.abs(fft_vals) / (N / 2)
+
+# Choose display unit
+max_freq = fft_freqs[-1]
+if max_freq >= 1e6:
+    fscale, funit = 1e-6, "MHz"
+elif max_freq >= 1e3:
+    fscale, funit = 1e-3, "kHz"
+else:
+    fscale, funit = 1.0, "Hz"
+
+# Top N dominant (skip DC bucket)
+nz_mask   = fft_freqs > 0
+top_idx   = np.argsort(fft_mag[nz_mask])[::-1][:fft_top_n]
+dom_freqs = fft_freqs[nz_mask][top_idx]
+dom_mags  = fft_mag[nz_mask][top_idx]
+
+fig_fft = go.Figure()
+fig_fft.add_trace(go.Scatter(
+    x=fft_freqs[nz_mask] * fscale,
+    y=fft_mag[nz_mask],
+    mode="lines", name="Magnitude",
+    line=dict(color="#e8a000", width=1),
+))
+fig_fft.add_trace(go.Scatter(
+    x=dom_freqs * fscale, y=dom_mags,
+    mode="markers", name="Dominant",
+    marker=dict(color="#e83030", size=7, symbol="circle"),
+))
+fig_fft.update_layout(
+    xaxis_title=f"Frequency ({funit})",
+    yaxis_title="Magnitude (V)" + (" [log]" if fft_log else ""),
+    yaxis_type="log" if fft_log else "linear",
+    margin=dict(l=0, r=0, t=10, b=0), height=280,
+    legend=dict(orientation="h"),
+    paper_bgcolor=pc["bg"], plot_bgcolor=pc["bg"], font=dict(color=pc["text"]),
+    xaxis=dict(gridcolor=pc["grid"]),
+    yaxis=dict(gridcolor=pc["grid"]),
+)
+st.plotly_chart(fig_fft, use_container_width=True)
+
+# Dominant frequency table
+fund_freq = dom_freqs[0] if len(dom_freqs) > 0 else None
+
+col_freq, col_table = st.columns([1, 2])
+with col_freq:
+    if fund_freq:
+        st.metric("Fundamental frequency", f"{fund_freq*fscale:.4f} {funit}")
+        st.metric("Nyquist limit",         f"{max_freq*fscale:.4f} {funit}")
+
+with col_table:
+    rows = {
+        f"Frequency ({funit})": [f"{f*fscale:.4f}" for f in dom_freqs],
+        "Magnitude (V)":        [f"{m:.5f}"        for m in dom_mags],
+        "Period (µs)":          [f"{1/f*1e6:.2f}"  for f in dom_freqs],
+    }
+    import pandas as pd
+    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+
+# ---------------------------------------------------------------------------
+# Results tabs
 # ---------------------------------------------------------------------------
 
 st.subheader("Results")
@@ -380,7 +258,7 @@ tab_bits, tab_decoded, tab_hex = st.tabs(["Raw bit stream", "Decoded payload", "
 
 with tab_bits:
     stream_str = "".join(str(b) for b in bit_stream)
-    lines_out = []
+    lines_out  = []
     for i in range(0, len(stream_str), 64):
         chunk = stream_str[i : i + 64]
         lines_out.append(" ".join(chunk[j : j + 8] for j in range(0, len(chunk), 8)))
@@ -390,54 +268,36 @@ with tab_decoded:
     if encoding == "ascii":
         st.code("".join(decoded), language=None)
     else:
-        rows = []
-        for i in range(0, len(decoded), 16):
-            rows.append(" ".join(decoded[i : i + 16]))
-        st.code("\n".join(rows), language=None)
-
-    st.download_button(
-        "Download raw bytes",
-        data=bytes(frames),
-        file_name="decoded_payload.bin",
-        mime="application/octet-stream",
-    )
+        st.code("\n".join(" ".join(decoded[i:i+16]) for i in range(0, len(decoded), 16)),
+                language=None)
+    st.download_button("Download raw bytes", data=bytes(frames),
+                       file_name="decoded_payload.bin", mime="application/octet-stream")
 
 with tab_hex:
     hex_lines = []
     for i in range(0, len(frames), 16):
         row      = frames[i : i + 16]
-        addr     = f"{i:04X}"
         hex_part = " ".join(f"{v:02X}" for v in row)
         asc_part = "".join(chr(v) if 32 <= v <= 126 else "." for v in row)
-        hex_lines.append(f"{addr}  {hex_part:<48}  {asc_part}")
+        hex_lines.append(f"{i:04X}  {hex_part:<48}  {asc_part}")
     st.code("\n".join(hex_lines), language=None)
 
 # ---------------------------------------------------------------------------
-# Export — formatted PDF report
+# Export — PDF report
 # ---------------------------------------------------------------------------
 
 st.divider()
 st.markdown("**Export**")
 
 pdf_bytes = build_pdf(
-    filename    = uploaded.name,
-    meta        = meta,
-    times       = times,
-    voltages    = voltages,
-    threshold   = threshold,
-    baud        = baud,
-    bit_stream  = bit_stream,
-    frames      = frames,
-    decoded     = decoded,
-    encoding    = encoding,
-    bits_per_frame = bits_per_frame,
-    lsb_first   = lsb_first,
-    inverted    = invert,
+    filename=uploaded.name, meta=meta, times=times, voltages=voltages,
+    threshold=threshold, baud=baud, bit_stream=bit_stream, frames=frames,
+    decoded=decoded, encoding=encoding, bits_per_frame=bits_per_frame,
+    lsb_first=lsb_first, inverted=invert,
 )
-
 st.download_button(
-    label     = "📄 Download PDF Report",
-    data      = pdf_bytes,
-    file_name = uploaded.name.rsplit(".", 1)[0] + "_report.pdf",
-    mime      = "application/pdf",
+    label="📄 Download PDF Report",
+    data=pdf_bytes,
+    file_name=uploaded.name.rsplit(".", 1)[0] + "_report.pdf",
+    mime="application/pdf",
 )

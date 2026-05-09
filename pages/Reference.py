@@ -4,23 +4,18 @@ Reference page — glossary of all terms used in the decoder.
 
 import streamlit as st
 
+from theme import apply_theme, render_nav
+
 st.set_page_config(
     page_title="Reference — PULSE-A",
     page_icon="📖",
     layout="wide",
 )
+apply_theme()
 
 st.title("📖 Reference Guide")
 st.caption("Explanations of every term and setting used in the payload decoder.")
-
-nav1, nav2, nav3, _ = st.columns([1, 1, 1, 5])
-with nav1:
-    st.page_link("app.py", label="🏠 Decoder")
-with nav2:
-    st.page_link("pages/Compare.py", label="🔀 Compare")
-with nav3:
-    st.page_link("pages/Reference.py", label="📖 Reference")
-st.divider()
+render_nav("reference")
 
 # ---------------------------------------------------------------------------
 st.header("Signal basics")
@@ -223,4 +218,97 @@ ADDR  hex bytes (up to 16 per row)  ASCII representation
 - **ASCII** — printable characters shown as-is; non-printable shown as `.`.
 
 This view is useful for finding protocol headers, checksums, or non-printable control bytes alongside the human-readable content.
+""")
+
+# ---------------------------------------------------------------------------
+st.header("Fourier Analysis (FFT)")
+
+with st.expander("What is the Fourier Transform?", expanded=True):
+    st.markdown("""
+The **Fourier Transform** decomposes a signal from the **time domain** into the **frequency domain**.
+
+- **Time domain** — voltage measured over time (what the oscilloscope shows).
+- **Frequency domain** — how much of each frequency is present in the signal.
+
+The decoder uses the **Fast Fourier Transform (FFT)**, which is a computationally efficient algorithm for computing the Discrete Fourier Transform (DFT) on a sampled signal.
+
+**Why is this useful?**
+- Identify the fundamental frequency of a serial signal
+- Detect noise, interference, or unexpected harmonics
+- Verify that the baud rate matches the dominant frequency
+- Diagnose signal integrity issues (ringing, aliasing, EMI)
+
+> *Example:* A 9,600 baud UART signal will show a dominant frequency near 9,600 Hz and harmonics at 28,800 Hz, 48,000 Hz, etc.
+""")
+
+with st.expander("Frequency spectrum — reading the chart"):
+    st.markdown("""
+The **frequency spectrum** chart shows:
+
+- **X axis** — frequency in Hz, kHz, or MHz (auto-scaled to the signal)
+- **Y axis** — magnitude in volts — how strongly that frequency is present
+- **Orange line** — the full spectrum
+- **Red dots** — the top N dominant (strongest) frequencies
+
+The chart excludes the **DC component** (0 Hz) which is simply the average voltage of the signal — not useful for identifying data frequencies.
+""")
+
+with st.expander("Fundamental frequency"):
+    st.markdown("""
+The **fundamental frequency** is the lowest and usually strongest frequency in the spectrum. For a periodic signal it equals **1 / period**.
+
+For a serial data signal the fundamental is directly related to the baud rate:
+- A square wave at 9,600 baud has a fundamental near **9,600 Hz**
+- The exact value depends on the data pattern — a long run of alternating 1/0 bits creates the clearest fundamental
+
+> Compare the fundamental against the detected baud rate to cross-check the decoding.
+""")
+
+with st.expander("Harmonics"):
+    st.markdown("""
+**Harmonics** are frequency components at integer multiples of the fundamental.
+
+A **square wave** is made up of odd harmonics only:
+
+```
+f, 3f, 5f, 7f, 9f, ...
+```
+
+Where f is the fundamental. Their magnitudes decrease as 1/n (the 3rd harmonic has ⅓ the magnitude of the fundamental).
+
+| Harmonic | Multiplier | Relative magnitude |
+|----------|------------|-------------------|
+| 1st (fundamental) | 1× | 1.000 |
+| 3rd              | 3× | 0.333 |
+| 5th              | 5× | 0.200 |
+| 7th              | 7× | 0.143 |
+
+If you see even harmonics (2f, 4f) it can indicate signal asymmetry, noise, or a non-square waveform.
+""")
+
+with st.expander("Nyquist frequency"):
+    st.markdown("""
+The **Nyquist frequency** is the highest frequency the oscilloscope can correctly measure:
+
+```
+f_nyquist = sample_rate / 2
+```
+
+| Sample rate | Nyquist limit |
+|-------------|--------------|
+| 100 MHz     | 50 MHz       |
+| 1 GSa/s     | 500 MHz      |
+
+Any frequency above the Nyquist limit will appear **aliased** — folded back into the spectrum as a false lower frequency. Always ensure your sample rate is at least twice the highest frequency of interest.
+""")
+
+with st.expander("Log scale (Y axis)"):
+    st.markdown("""
+The **log scale** option switches the magnitude axis to a logarithmic scale (dB-like view).
+
+- Useful when dominant peaks are much larger than the harmonics — in linear scale the harmonics become invisible
+- Makes it easier to see weak frequency components and noise floor
+- Harmonic relationships become evenly spaced on the log scale
+
+Toggle this in the **FFT** section of the sidebar.
 """)

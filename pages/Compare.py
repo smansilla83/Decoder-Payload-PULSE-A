@@ -5,6 +5,7 @@ Signal comparison page — overlay two oscilloscope CSV captures.
 import streamlit as st
 import plotly.graph_objects as go
 
+from theme import apply_theme, render_nav, plot_colors
 from decoder_1 import (
     parse_csv_content,
     auto_threshold,
@@ -20,18 +21,12 @@ st.set_page_config(
     page_icon="🔀",
     layout="wide",
 )
+LIGHT = apply_theme()
+pc    = plot_colors(LIGHT)
 
 st.title("🔀 Signal Comparison")
 st.caption("Upload two CSV captures to overlay and compare their signals and decoded payloads.")
-
-nav1, nav2, nav3, _ = st.columns([1, 1, 1, 5])
-with nav1:
-    st.page_link("app.py", label="🏠 Decoder")
-with nav2:
-    st.page_link("pages/Compare.py", label="🔀 Compare")
-with nav3:
-    st.page_link("pages/Reference.py", label="📖 Reference")
-st.divider()
+render_nav("compare")
 
 # ---------------------------------------------------------------------------
 # Upload
@@ -144,9 +139,9 @@ fig.update_layout(
     margin=dict(l=0, r=0, t=10, b=0),
     height=360,
     legend=dict(orientation="h"),
-    xaxis=dict(
-        rangeslider=dict(visible=True, thickness=0.08),
-    ),
+    paper_bgcolor=pc["bg"], plot_bgcolor=pc["bg"], font=dict(color=pc["text"]),
+    xaxis=dict(rangeslider=dict(visible=True, thickness=0.08), gridcolor=pc["grid"]),
+    yaxis=dict(gridcolor=pc["grid"]),
 )
 st.plotly_chart(fig, use_container_width=True)
 
