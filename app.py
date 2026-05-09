@@ -40,132 +40,135 @@ LIGHT = st.session_state.light_mode
 
 THEME_CSS = """
 <style>
-  /* ── Page & sidebar backgrounds ── */
+  /* ── Warm beige palette ──────────────────────────────────────────
+     bg:       #faf6f0  main page (warm cream)
+     sidebar:  #f0ebe0  sidebar
+     surface:  #ede6d8  cards / inputs / dropzones
+     surface2: #e4dccb  deeper surface / hover
+     border:   #c8b89a  warm tan border
+     text:     #2c1f0e  dark warm brown
+     muted:    #6b5540  secondary text
+  ────────────────────────────────────────────────────────────────── */
+
+  /* Page */
   html, body, .stApp, .main, .block-container {
-    background-color: #f0f2f6 !important;
-  }
-  [data-testid="stSidebar"],
-  [data-testid="stSidebar"] > div:first-child {
-    background-color: #e2e6ef !important;
+    background-color: #faf6f0 !important;
   }
 
-  /* ── All text dark ── */
+  /* Sidebar */
+  [data-testid="stSidebar"],
+  [data-testid="stSidebar"] > div:first-child {
+    background-color: #f0ebe0 !important;
+  }
+
+  /* All text warm dark brown */
   .stApp, .stApp p, .stApp span, .stApp div,
   .stApp label, .stApp h1, .stApp h2, .stApp h3,
   .stApp h4, .stApp h5, .stApp h6, .stApp li,
-  .stApp td, .stApp th, .stApp caption,
   [data-testid="stSidebar"] * {
-    color: #1a1a2e !important;
+    color: #2c1f0e !important;
   }
 
-  /* ── File uploader ── */
+  /* ── File uploader — target every layer ── */
+  [data-testid="stFileUploader"],
+  [data-testid="stFileUploader"] > div,
+  section[data-testid="stFileUploadDropzone"],
+  div[data-testid="stFileUploadDropzone"],
   [data-testid="stFileUploadDropzone"],
-  [data-testid="stFileUploadDropzone"] > div {
-    background-color: #dde3ee !important;
-    border-color: #9aa5be !important;
+  [data-testid="stFileUploadDropzone"] > div,
+  [data-testid="stFileUploadDropzone"] > section {
+    background-color: #ede6d8 !important;
+    border-color: #c8b89a !important;
   }
   [data-testid="stFileUploadDropzone"] *,
-  [data-testid="stFileUploadDropzone"] small {
-    color: #3a3a5a !important;
+  [data-testid="stFileUploader"] * {
+    color: #2c1f0e !important;
+    background-color: transparent !important;
   }
-  [data-testid="stFileUploadDropzone"] button {
-    background-color: #c8d0e0 !important;
-    color: #1a1a2e !important;
-    border-color: #9aa5be !important;
+  [data-testid="stFileUploadDropzone"] button,
+  [data-testid="stFileUploaderDropzoneInput"] ~ * button {
+    background-color: #e4dccb !important;
+    border-color: #c8b89a !important;
+    color: #2c1f0e !important;
   }
 
-  /* ── Selectbox / dropdowns / inputs ── */
+  /* ── Selects / dropdowns ── */
   [data-baseweb="select"] > div,
   [data-baseweb="select"] div[class*="ValueContainer"],
   [data-baseweb="input"] > div,
-  [data-baseweb="base-input"] {
-    background-color: #dde3ee !important;
-    border-color: #9aa5be !important;
-  }
-  [data-baseweb="select"] *,
-  [data-baseweb="input"] * {
-    background-color: #dde3ee !important;
-    color: #1a1a2e !important;
+  [data-baseweb="base-input"],
+  [data-baseweb="select"] * {
+    background-color: #ede6d8 !important;
+    border-color: #c8b89a !important;
+    color: #2c1f0e !important;
   }
   [data-baseweb="popover"] div,
   [data-baseweb="menu"] {
-    background-color: #dde3ee !important;
-    color: #1a1a2e !important;
+    background-color: #ede6d8 !important;
+    color: #2c1f0e !important;
   }
-  [data-baseweb="option"]:hover {
-    background-color: #c8d0e0 !important;
-  }
+  [data-baseweb="option"]:hover { background-color: #e4dccb !important; }
 
   /* ── Number inputs ── */
   input[type="number"], input[type="text"] {
-    background-color: #dde3ee !important;
-    color: #1a1a2e !important;
-    border-color: #9aa5be !important;
+    background-color: #ede6d8 !important;
+    color: #2c1f0e !important;
+    border-color: #c8b89a !important;
   }
 
-  /* ── Checkboxes labels ── */
-  [data-testid="stCheckbox"] span { color: #1a1a2e !important; }
-
   /* ── Buttons ── */
-  [data-testid="stBaseButton-secondary"],
-  button[kind="secondary"] {
-    background-color: #c8d0e0 !important;
-    color: #1a1a2e !important;
-    border-color: #9aa5be !important;
+  button, [data-testid="stBaseButton-secondary"] {
+    background-color: #e4dccb !important;
+    color: #2c1f0e !important;
+    border-color: #c8b89a !important;
   }
 
   /* ── Alert / info boxes ── */
   [data-testid="stAlert"],
   [data-testid="stAlertContainer"] {
-    background-color: #d6e4f7 !important;
-    color: #1a1a2e !important;
+    background-color: #eee6d5 !important;
+    border-left-color: #c8b89a !important;
   }
-  [data-testid="stAlert"] * { color: #1a1a2e !important; }
+  [data-testid="stAlert"] * { color: #2c1f0e !important; }
 
   /* ── Metrics ── */
-  [data-testid="stMetricValue"] { color: #1a1a2e !important; }
-  [data-testid="stMetricLabel"] { color: #4a4a6a !important; }
-  [data-testid="stMetricDelta"] { color: #2a6a2a !important; }
+  [data-testid="stMetricValue"] { color: #2c1f0e !important; }
+  [data-testid="stMetricLabel"] { color: #6b5540 !important; }
 
   /* ── Tabs ── */
-  [data-baseweb="tab-list"]     { background-color: #d8dfe8 !important; }
-  [data-baseweb="tab"]          { background-color: transparent !important;
-                                   color: #1a1a2e !important; }
-  [aria-selected="true"]        { background-color: #c0cad8 !important; }
-  [data-baseweb="tab-panel"]    { background-color: #f0f2f6 !important; }
+  [data-baseweb="tab-list"]  { background-color: #e4dccb !important; }
+  [data-baseweb="tab"]       { color: #2c1f0e !important; }
+  [aria-selected="true"]     { background-color: #d4c8b0 !important; }
+  [data-baseweb="tab-panel"] { background-color: #faf6f0 !important; }
 
-  /* ── Code / preformatted ── */
+  /* ── Code blocks ── */
   pre, code,
   [data-testid="stCode"] pre,
   .stCodeBlock, .stCodeBlock * {
-    background-color: #e0e5ef !important;
-    color: #1a1a2e !important;
+    background-color: #ede6d8 !important;
+    color: #2c1f0e !important;
   }
 
   /* ── Expanders ── */
   [data-testid="stExpander"],
   [data-testid="stExpander"] > details {
-    background-color: #e8ecf5 !important;
-    border-color: #b0b8cc !important;
+    background-color: #f0ebe0 !important;
+    border-color: #c8b89a !important;
   }
-  [data-testid="stExpander"] summary { color: #1a1a2e !important; }
+  [data-testid="stExpander"] summary { color: #2c1f0e !important; }
 
-  /* ── Dividers ── */
-  hr { border-color: #b8c2d4 !important; }
+  /* ── Divider ── */
+  hr { border-color: #c8b89a !important; }
 
-  /* ── Caption / small text ── */
+  /* ── Caption ── */
   .stCaption, [data-testid="stCaptionContainer"] * {
-    color: #4a4a6a !important;
+    color: #6b5540 !important;
   }
 
-  /* ── Page link buttons ── */
+  /* ── Nav page links ── */
   [data-testid="stPageLink"] a,
-  [data-testid="stPageLink"] a * {
-    color: #1a1a2e !important;
-  }
-  [data-testid="stPageLink-active"] a {
-    background-color: #c0cad8 !important;
-  }
+  [data-testid="stPageLink"] a * { color: #2c1f0e !important; }
+  [data-testid="stPageLink-active"] a { background-color: #d4c8b0 !important; }
 </style>
 """ if LIGHT else ""
 
@@ -330,8 +333,9 @@ fig.add_hline(
     annotation_position="bottom right",
 )
 
-plot_bg   = "#ffffff" if LIGHT else "#0e1117"
-plot_text = "#1a1a2e" if LIGHT else "#fafafa"
+plot_bg   = "#ede6d8" if LIGHT else "#0e1117"
+plot_text = "#2c1f0e" if LIGHT else "#fafafa"
+grid_col  = "#c8b89a" if LIGHT else "#333333"
 fig.update_layout(
     xaxis_title="Time (ms)",
     yaxis_title="Voltage (V)",
@@ -343,9 +347,9 @@ fig.update_layout(
     font=dict(color=plot_text),
     xaxis=dict(
         rangeslider=dict(visible=True, thickness=0.08),
-        gridcolor="#cccccc" if LIGHT else "#333333",
+        gridcolor=grid_col,
     ),
-    yaxis=dict(gridcolor="#cccccc" if LIGHT else "#333333"),
+    yaxis=dict(gridcolor=grid_col),
 )
 st.plotly_chart(fig, use_container_width=True)
 
