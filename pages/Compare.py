@@ -24,6 +24,15 @@ st.set_page_config(
 st.title("🔀 Signal Comparison")
 st.caption("Upload two CSV captures to overlay and compare their signals and decoded payloads.")
 
+nav1, nav2, nav3, _ = st.columns([1, 1, 1, 5])
+with nav1:
+    st.page_link("app.py", label="🏠 Decoder")
+with nav2:
+    st.page_link("pages/Compare.py", label="🔀 Compare")
+with nav3:
+    st.page_link("pages/Reference.py", label="📖 Reference")
+st.divider()
+
 # ---------------------------------------------------------------------------
 # Upload
 # ---------------------------------------------------------------------------

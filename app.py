@@ -48,6 +48,16 @@ st.markdown("""
 st.title("📡 Oscilloscope Payload Decoder")
 st.caption("Upload a Tektronix (or compatible) CSV capture to extract and decode the bit stream.")
 
+# Top navigation bar
+nav1, nav2, nav3, _= st.columns([1, 1, 1, 5])
+with nav1:
+    st.page_link("app.py", label="🏠 Decoder")
+with nav2:
+    st.page_link("pages/Compare.py", label="🔀 Compare")
+with nav3:
+    st.page_link("pages/Reference.py", label="📖 Reference")
+st.divider()
+
 # ---------------------------------------------------------------------------
 # Sidebar — settings
 # ---------------------------------------------------------------------------

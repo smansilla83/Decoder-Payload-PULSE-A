@@ -13,6 +13,15 @@ st.set_page_config(
 st.title("📖 Reference Guide")
 st.caption("Explanations of every term and setting used in the payload decoder.")
 
+nav1, nav2, nav3, _ = st.columns([1, 1, 1, 5])
+with nav1:
+    st.page_link("app.py", label="🏠 Decoder")
+with nav2:
+    st.page_link("pages/Compare.py", label="🔀 Compare")
+with nav3:
+    st.page_link("pages/Reference.py", label="📖 Reference")
+st.divider()
+
 # ---------------------------------------------------------------------------
 st.header("Signal basics")
 
