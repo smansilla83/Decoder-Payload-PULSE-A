@@ -6,6 +6,7 @@ Run with:
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 import plotly.graph_objects as go
 
 from decoder_1 import (
@@ -28,8 +29,34 @@ st.set_page_config(
     layout="wide",
 )
 
-# Print CSS — hides UI chrome when the user prints / saves as PDF
-st.markdown("""
+# ---------------------------------------------------------------------------
+# Theme toggle (session state)
+# ---------------------------------------------------------------------------
+
+if "light_mode" not in st.session_state:
+    st.session_state.light_mode = False
+
+LIGHT = st.session_state.light_mode
+
+THEME_CSS = """
+<style>
+  /* ── Light mode overrides ── */
+  .stApp                              { background-color: #f5f7fa !important; }
+  [data-testid="stSidebar"]           { background-color: #e8ecf2 !important; }
+  [data-testid="stSidebar"] *,
+  .stApp *                            { color: #1a1a2e !important; }
+  [data-testid="stMetricValue"]       { color: #1a1a2e !important; }
+  [data-testid="stMetricLabel"]       { color: #4a4a6a !important; }
+  .stTabs [data-baseweb="tab"]        { background-color: #dde3ee !important; }
+  .stTabs [aria-selected="true"]      { background-color: #c5cede !important; }
+  pre, code, .stCodeBlock             { background-color: #e2e7f0 !important;
+                                        color: #1a1a2e !important; }
+  [data-testid="stExpander"]          { background-color: #eaeff7 !important; }
+  hr                                  { border-color: #c0c8d8 !important; }
+</style>
+""" if LIGHT else ""
+
+PRINT_CSS = """
 <style>
 @media print {
     [data-testid="stSidebar"],
@@ -43,19 +70,30 @@ st.markdown("""
     .block-container { padding: 1rem !important; }
 }
 </style>
-""", unsafe_allow_html=True)
+"""
+
+st.markdown(PRINT_CSS + THEME_CSS, unsafe_allow_html=True)
+
+# ---------------------------------------------------------------------------
+# Title + nav bar
+# ---------------------------------------------------------------------------
 
 st.title("📡 Oscilloscope Payload Decoder")
 st.caption("Upload a Tektronix (or compatible) CSV capture to extract and decode the bit stream.")
 
-# Top navigation bar
-nav1, nav2, nav3, _= st.columns([1, 1, 1, 5])
+nav1, nav2, nav3, _, theme_col = st.columns([1, 1, 1, 4, 1])
 with nav1:
     st.page_link("app.py", label="🏠 Decoder")
 with nav2:
     st.page_link("pages/Compare.py", label="🔀 Compare")
 with nav3:
     st.page_link("pages/Reference.py", label="📖 Reference")
+with theme_col:
+    label = "☀️ Light" if not LIGHT else "🌙 Dark"
+    if st.button(label, key="theme_toggle"):
+        st.session_state.light_mode = not st.session_state.light_mode
+        st.rerun()
+
 st.divider()
 
 # ---------------------------------------------------------------------------
@@ -161,8 +199,7 @@ if meta:
 st.subheader("Signal")
 
 MAX_PLOT_POINTS = 10_000
-n    = len(times)
-step = max(1, n // MAX_PLOT_POINTS)
+step = max(1, len(times) // MAX_PLOT_POINTS)
 t_ms = [t * 1e3 for t in times[::step]]
 v_ds = voltages[::step]
 
@@ -179,15 +216,23 @@ fig.add_hline(
     annotation_text=f"Threshold {threshold:.2f} V",
     annotation_position="bottom right",
 )
+
+plot_bg   = "#ffffff" if LIGHT else "#0e1117"
+plot_text = "#1a1a2e" if LIGHT else "#fafafa"
 fig.update_layout(
     xaxis_title="Time (ms)",
     yaxis_title="Voltage (V)",
     margin=dict(l=0, r=0, t=10, b=0),
     height=340,
     legend=dict(orientation="h"),
+    paper_bgcolor=plot_bg,
+    plot_bgcolor=plot_bg,
+    font=dict(color=plot_text),
     xaxis=dict(
         rangeslider=dict(visible=True, thickness=0.08),
+        gridcolor="#cccccc" if LIGHT else "#333333",
     ),
+    yaxis=dict(gridcolor="#cccccc" if LIGHT else "#333333"),
 )
 st.plotly_chart(fig, use_container_width=True)
 
@@ -251,26 +296,25 @@ with tab_hex:
     st.code("\n".join(hex_lines), language=None)
 
 # ---------------------------------------------------------------------------
-# Print / Save as PDF
+# Export — Print / Save as PDF
 # ---------------------------------------------------------------------------
 
 st.divider()
 st.markdown("**Export**")
-st.markdown(
-    """
-    <a href="javascript:window.print()" style="
-        display: inline-block;
-        padding: 0.45rem 1.2rem;
-        background-color: #ff4b4b;
-        color: white;
-        border-radius: 0.4rem;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 0.875rem;
-    ">🖨️ Print / Save as PDF</a>
-    <span style="margin-left:0.75rem; font-size:0.8rem; color:gray;">
-        Opens your browser's print dialog — choose "Save as PDF" as the destination.
-    </span>
-    """,
-    unsafe_allow_html=True,
-)
+
+# Use window.parent.print() so the call escapes the component iframe
+components.html("""
+<button onclick="window.parent.print()" style="
+    padding: 0.45rem 1.2rem;
+    background-color: #ff4b4b;
+    color: white;
+    border: none;
+    border-radius: 0.4rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+">🖨️ Print / Save as PDF</button>
+<span style="margin-left:0.75rem; font-size:0.8rem; color:gray;">
+    Opens your browser&rsquo;s print dialog — choose <em>Save as PDF</em> as the destination.
+</span>
+""", height=48)
