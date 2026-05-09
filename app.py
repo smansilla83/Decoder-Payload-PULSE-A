@@ -6,9 +6,9 @@ Run with:
 """
 
 import streamlit as st
-import streamlit.components.v1 as components
 import plotly.graph_objects as go
 
+from pdf_report import build_pdf
 from decoder_1 import (
     parse_csv_content,
     auto_threshold,
@@ -409,25 +409,31 @@ with tab_hex:
     st.code("\n".join(hex_lines), language=None)
 
 # ---------------------------------------------------------------------------
-# Export — Print / Save as PDF
+# Export — formatted PDF report
 # ---------------------------------------------------------------------------
 
 st.divider()
 st.markdown("**Export**")
 
-# Use window.parent.print() so the call escapes the component iframe
-components.html("""
-<button onclick="window.parent.print()" style="
-    padding: 0.45rem 1.2rem;
-    background-color: #ff4b4b;
-    color: white;
-    border: none;
-    border-radius: 0.4rem;
-    font-weight: 600;
-    font-size: 0.875rem;
-    cursor: pointer;
-">🖨️ Print / Save as PDF</button>
-<span style="margin-left:0.75rem; font-size:0.8rem; color:gray;">
-    Opens your browser&rsquo;s print dialog — choose <em>Save as PDF</em> as the destination.
-</span>
-""", height=48)
+pdf_bytes = build_pdf(
+    filename    = uploaded.name,
+    meta        = meta,
+    times       = times,
+    voltages    = voltages,
+    threshold   = threshold,
+    baud        = baud,
+    bit_stream  = bit_stream,
+    frames      = frames,
+    decoded     = decoded,
+    encoding    = encoding,
+    bits_per_frame = bits_per_frame,
+    lsb_first   = lsb_first,
+    inverted    = invert,
+)
+
+st.download_button(
+    label     = "📄 Download PDF Report",
+    data      = pdf_bytes,
+    file_name = uploaded.name.rsplit(".", 1)[0] + "_report.pdf",
+    mime      = "application/pdf",
+)
