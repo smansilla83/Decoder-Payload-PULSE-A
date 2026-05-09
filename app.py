@@ -40,19 +40,132 @@ LIGHT = st.session_state.light_mode
 
 THEME_CSS = """
 <style>
-  /* ── Light mode overrides ── */
-  .stApp                              { background-color: #f5f7fa !important; }
-  [data-testid="stSidebar"]           { background-color: #e8ecf2 !important; }
-  [data-testid="stSidebar"] *,
-  .stApp *                            { color: #1a1a2e !important; }
-  [data-testid="stMetricValue"]       { color: #1a1a2e !important; }
-  [data-testid="stMetricLabel"]       { color: #4a4a6a !important; }
-  .stTabs [data-baseweb="tab"]        { background-color: #dde3ee !important; }
-  .stTabs [aria-selected="true"]      { background-color: #c5cede !important; }
-  pre, code, .stCodeBlock             { background-color: #e2e7f0 !important;
-                                        color: #1a1a2e !important; }
-  [data-testid="stExpander"]          { background-color: #eaeff7 !important; }
-  hr                                  { border-color: #c0c8d8 !important; }
+  /* ── Page & sidebar backgrounds ── */
+  html, body, .stApp, .main, .block-container {
+    background-color: #f0f2f6 !important;
+  }
+  [data-testid="stSidebar"],
+  [data-testid="stSidebar"] > div:first-child {
+    background-color: #e2e6ef !important;
+  }
+
+  /* ── All text dark ── */
+  .stApp, .stApp p, .stApp span, .stApp div,
+  .stApp label, .stApp h1, .stApp h2, .stApp h3,
+  .stApp h4, .stApp h5, .stApp h6, .stApp li,
+  .stApp td, .stApp th, .stApp caption,
+  [data-testid="stSidebar"] * {
+    color: #1a1a2e !important;
+  }
+
+  /* ── File uploader ── */
+  [data-testid="stFileUploadDropzone"],
+  [data-testid="stFileUploadDropzone"] > div {
+    background-color: #dde3ee !important;
+    border-color: #9aa5be !important;
+  }
+  [data-testid="stFileUploadDropzone"] *,
+  [data-testid="stFileUploadDropzone"] small {
+    color: #3a3a5a !important;
+  }
+  [data-testid="stFileUploadDropzone"] button {
+    background-color: #c8d0e0 !important;
+    color: #1a1a2e !important;
+    border-color: #9aa5be !important;
+  }
+
+  /* ── Selectbox / dropdowns / inputs ── */
+  [data-baseweb="select"] > div,
+  [data-baseweb="select"] div[class*="ValueContainer"],
+  [data-baseweb="input"] > div,
+  [data-baseweb="base-input"] {
+    background-color: #dde3ee !important;
+    border-color: #9aa5be !important;
+  }
+  [data-baseweb="select"] *,
+  [data-baseweb="input"] * {
+    background-color: #dde3ee !important;
+    color: #1a1a2e !important;
+  }
+  [data-baseweb="popover"] div,
+  [data-baseweb="menu"] {
+    background-color: #dde3ee !important;
+    color: #1a1a2e !important;
+  }
+  [data-baseweb="option"]:hover {
+    background-color: #c8d0e0 !important;
+  }
+
+  /* ── Number inputs ── */
+  input[type="number"], input[type="text"] {
+    background-color: #dde3ee !important;
+    color: #1a1a2e !important;
+    border-color: #9aa5be !important;
+  }
+
+  /* ── Checkboxes labels ── */
+  [data-testid="stCheckbox"] span { color: #1a1a2e !important; }
+
+  /* ── Buttons ── */
+  [data-testid="stBaseButton-secondary"],
+  button[kind="secondary"] {
+    background-color: #c8d0e0 !important;
+    color: #1a1a2e !important;
+    border-color: #9aa5be !important;
+  }
+
+  /* ── Alert / info boxes ── */
+  [data-testid="stAlert"],
+  [data-testid="stAlertContainer"] {
+    background-color: #d6e4f7 !important;
+    color: #1a1a2e !important;
+  }
+  [data-testid="stAlert"] * { color: #1a1a2e !important; }
+
+  /* ── Metrics ── */
+  [data-testid="stMetricValue"] { color: #1a1a2e !important; }
+  [data-testid="stMetricLabel"] { color: #4a4a6a !important; }
+  [data-testid="stMetricDelta"] { color: #2a6a2a !important; }
+
+  /* ── Tabs ── */
+  [data-baseweb="tab-list"]     { background-color: #d8dfe8 !important; }
+  [data-baseweb="tab"]          { background-color: transparent !important;
+                                   color: #1a1a2e !important; }
+  [aria-selected="true"]        { background-color: #c0cad8 !important; }
+  [data-baseweb="tab-panel"]    { background-color: #f0f2f6 !important; }
+
+  /* ── Code / preformatted ── */
+  pre, code,
+  [data-testid="stCode"] pre,
+  .stCodeBlock, .stCodeBlock * {
+    background-color: #e0e5ef !important;
+    color: #1a1a2e !important;
+  }
+
+  /* ── Expanders ── */
+  [data-testid="stExpander"],
+  [data-testid="stExpander"] > details {
+    background-color: #e8ecf5 !important;
+    border-color: #b0b8cc !important;
+  }
+  [data-testid="stExpander"] summary { color: #1a1a2e !important; }
+
+  /* ── Dividers ── */
+  hr { border-color: #b8c2d4 !important; }
+
+  /* ── Caption / small text ── */
+  .stCaption, [data-testid="stCaptionContainer"] * {
+    color: #4a4a6a !important;
+  }
+
+  /* ── Page link buttons ── */
+  [data-testid="stPageLink"] a,
+  [data-testid="stPageLink"] a * {
+    color: #1a1a2e !important;
+  }
+  [data-testid="stPageLink-active"] a {
+    background-color: #c0cad8 !important;
+  }
 </style>
 """ if LIGHT else ""
 
